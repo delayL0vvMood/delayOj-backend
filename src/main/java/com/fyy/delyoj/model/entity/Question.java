@@ -1,26 +1,20 @@
 package com.fyy.delyoj.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
 import lombok.Data;
 
-/**
- * 题目
- * @TableName question
- */
 @TableName(value ="question")
 @Data
 public class Question implements Serializable {
     /**
      * id
      */
-    @TableId(type = IdType.ASSIGN_ID)//为了防止用户根据id顺序爬取题目 将题目生成方式改为ASSIGN——ID而不是连续的
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -91,6 +85,7 @@ public class Question implements Serializable {
     /**
      * 是否删除
      */
+    @TableLogic
     private Integer isDelete;
 
     @TableField(exist = false)

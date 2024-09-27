@@ -69,12 +69,10 @@ public class QuestionController {
         }
 
 
-        List<JudgeConfig> judgeConfig = questionAddRequest.getJudgeConfig();
+        JudgeConfig judgeConfig = questionAddRequest.getJudgeConfig();
         if(judgeConfig != null){
             question.setJudgeConfig(GSON.toJson(judgeConfig));
         }
-
-
 
         questionService.validQuestion(question, true);
         User loginUser = userService.getLoginUser(request);

@@ -17,16 +17,16 @@ import javax.servlet.http.HttpServletRequest;
 /**
 * @author Administrator
 * @description 针对表【question_submit(题目提交)】的数据库操作Service
-* @createDate 2024-09-01 21:27:26
 */
 public interface QuestionSubmitService extends IService<QuestionSubmit> {
+
 
     /**
      * 点赞
      *
-     * @param questionSubmitAddRequest
+     * @param questionSubmitAddRequest 题目提交信息
      * @param loginUser
-     * @return 提交记录的id
+     * @return 返回提交记录id
      */
     long doQuestionSubmit(QuestionSubmitAddRequest questionSubmitAddRequest, User loginUser);
 
@@ -34,36 +34,8 @@ public interface QuestionSubmitService extends IService<QuestionSubmit> {
      * 帖子点赞（内部服务）
      *
      * @param userId
-     * @param postId
+     * @param questionId
      * @return
      */
-    int doQuestionSubmitInner(long userId, long postId);
-
-    /**
-     * 获取查询条件
-     *
-     * @param questionSubmitQueryRequest
-     * @return
-     */
-    QueryWrapper<QuestionSubmit> getQueryWrapper(QuestionSubmitQueryRequest questionSubmitQueryRequest);
-
-
-    /**
-     * 获取帖子封装
-     *
-     * @param questionSubmit
-     * @param loginUser
-     * @return
-     */
-    QuestionSubmitVO getQuestionSubmitVO(QuestionSubmit questionSubmit, User loginUser);
-
-    /**
-     * 分页获取帖子封装
-     *
-     * @param questionSubmitPage
-     * @param loginUser
-     * @return
-     */
-    Page<QuestionSubmitVO> getQuestionSubmitVOPage(Page<QuestionSubmit> questionSubmitPage, User loginUser);
-
+    int doQuestionSubmitInner(long userId, long questionId);
 }

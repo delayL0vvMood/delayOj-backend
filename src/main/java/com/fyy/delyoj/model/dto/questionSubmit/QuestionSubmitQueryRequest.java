@@ -12,6 +12,9 @@ import java.io.Serializable;
  * @from <a href="https://fyy.icu">编程导航知识星球</a>
  */
 @Data
+/*
+* 查询排序
+* */
 @EqualsAndHashCode(callSuper = true)
 public class QuestionSubmitQueryRequest extends PageRequest implements Serializable {
 
@@ -29,6 +32,10 @@ public class QuestionSubmitQueryRequest extends PageRequest implements Serializa
      * 题目 id
      */
     private Long questionId;
+
+    /**
+     * 用户 id
+     */
 
     private Long userId;
 

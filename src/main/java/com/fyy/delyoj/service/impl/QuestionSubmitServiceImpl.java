@@ -1,6 +1,7 @@
 package com.fyy.delyoj.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -20,8 +21,10 @@ import com.fyy.delyoj.utils.SqlUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fyy.delyoj.service.UserService;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -41,6 +44,10 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
 
     @Resource
     private QuestionService questionService;
+    @Autowired
+    private UserService userServiceImpl;
+    @Resource
+    private UserService userService;
 
     /**
      * 点赞
@@ -51,8 +58,14 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
      */
     @Override
     public long doQuestionSubmit(QuestionSubmitAddRequest questionSubmitAddRequest, User loginUser) {
+        //todo 校验编程语言是否合法
+        String language = questionSubmitAddRequest.getLanguage();
+        QuestionSubmitLanguageEnum enumByValue = QuestionSubmitLanguageEnum.getEnumByValue(language);
+        if (enumByValue == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"编程语言不合法");
+        }
         // 判断实体是否存在，根据类别获取实体
-        long questionId = questionSubmitAddRequest.getQuestionId()
+        long questionId = questionSubmitAddRequest.getQuestionId();
         Question question = questionService.getById(questionId);
         if (question == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
@@ -74,7 +87,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         questionSubmit.setLanguage(questionSubmitAddRequest.getLanguage());
 
         // todo 设置初始状态
-        questionSubmit.setStatus();
+        questionSubmit.setStatus(QuestionSubmitStatusEnum.WAITING.getValue());//获取初始状态
         questionSubmit.setJudgeInfo("{}");
         boolean save = this.save(questionSubmit);
         if ( !save) {
@@ -128,6 +141,89 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR);
             }
         }
+    }
+
+
+    /**
+     * 查询提交记录
+     * @param questionSubmitQueryRequest
+     * @return
+     */
+    @Override
+    public QueryWrapper<QuestionSubmit>  getQueryWrapper(QuestionSubmitQueryRequest questionSubmitQueryRequest){
+        QueryWrapper<QuestionSubmit> queryWrapper = new QueryWrapper<>();
+        if (questionSubmitQueryRequest != null) {
+            return queryWrapper;
+        }
+        String language = questionSubmitQueryRequest.getLanguage();
+        Integer status = questionSubmitQueryRequest.getStatus();
+        Long questionId = questionSubmitQueryRequest.getQuestionId();
+        Long userId = questionSubmitQueryRequest.getUserId();
+        String sortField = questionSubmitQueryRequest.getSortField();
+        String sortOrder = questionSubmitQueryRequest.getSortOrder();
+
+        //拼接查询条件
+        queryWrapper.eq(StringUtils.isNotBlank(language),"language",language);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(userId),"userId",userId);
+        //
+        queryWrapper.eq(QuestionSubmitStatusEnum.getEnumByValue(status) != null,"status",status);
+        queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),sortField);
+        return queryWrapper;
+
+    }
+    /**
+     * 获取提交封装
+     */
+    @Override
+    public QuestionSubmitVO getQuestionSubmitVO(QuestionSubmit questionSubmit, HttpServletRequest request){
+        QuestionSubmitVO questionSubmitVO = QuestionSubmitVO.objToVo(questionSubmit);
+        long questionSubmitId = questionSubmit.getQuestionId();
+        Long userId =questionSubmit.getUserId();
+        //获取用户信息
+        User user = null;
+        if (userId != null) {
+             user = userService.getById(userId);
+        }
+        UserVO userVO = userService.getUserVO(user);
+        questionSubmitVO.setUserVO(userVO);
+
+        return questionSubmitVO;
+    }
+
+
+    @Override
+
+    /**
+     * 分页获取题目封装
+     *
+     * @param questionSubmitPage
+     * @param loginUser
+     * @return
+     */
+    public Page<QuestionSubmitVO> getQuestionSubmitVOPage(Page<QuestionSubmit> questionSubmitPage, User loginUser){
+        List<QuestionSubmit> questionSubmitList = questionSubmitPage.getRecords();
+        Page<QuestionSubmitVO> questionSubmitVOPage = new Page<>(questionSubmitPage.getCurrent(), questionSubmitPage.getSize(), questionSubmitPage.getTotal());
+        if(CollectionUtil.isEmpty(questionSubmitList)){
+            return questionSubmitVOPage;
+        }
+
+        //关联查询用户信息
+        Set<Long> userIdSet = questionSubmitList.stream().map(QuestionSubmit::getUserId).collect(Collectors.toSet());
+        Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream().collect(Collectors.groupingBy(User::getId));
+
+        //封装用户信息
+        List<QuestionSubmitVO> questionSubmitVOList = questionSubmitList.stream().map(questionSubmit -> {
+            QuestionSubmitVO questionSubmitVO = QuestionSubmitVO.objToVo(questionSubmit);
+            Long userId = questionSubmit.getUserId();
+            User user = null;
+            if(userIdUserListMap.containsKey(userId)){
+                user = userIdUserListMap.get(userId).get(0);
+            }
+            questionSubmitVO.setUserVO(userService.getUserVO(user));
+            return questionSubmitVO;
+        }).collect(Collectors.toList());
+        questionSubmitVOPage.setRecords(questionSubmitVOList);
+        return questionSubmitVOPage;
     }
 }
 

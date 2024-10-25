@@ -65,6 +65,7 @@ public class QuestionSubmitController {
     /**
      * 分页获取题目提交列表（仅管理员，用户能查看到除答案的列表）
      * 根据权限过滤答案
+     * 功能：根据用户id，题目id，编程语言，题目状态，分页查询
      * @param questionSubmitQueryRequest
      * @return
      */

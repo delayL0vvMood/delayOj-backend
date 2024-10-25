@@ -132,12 +132,11 @@ public class QuestionController {
         if(judgeCases != null){
             question.setJudgeCase(GSON.toJson(judgeCases));
         }
-
-
-        List<JudgeConfig> judgeConfig = questionUpdateRequest.getJudgeConfig();
+        JudgeConfig judgeConfig = questionUpdateRequest.getJudgeConfig();
         if(judgeConfig != null){
             question.setJudgeConfig(GSON.toJson(judgeConfig));
         }
+
         // 参数校验
         questionService.validQuestion(question, false);
         long id = questionUpdateRequest.getId();

@@ -7,24 +7,24 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 用户角色枚举
+ * 判题信息消息枚举
  *
  * @author <a href="https://github.com/lifyy">程序员鱼皮</a>
  * @from <a href="https://fyy.icu">编程导航知识星球</a>
  */
 public enum JudgeInfoMessageEnum {
 
-    ACCEPTED("Accept", "成功"),
-    WRONG_ANSWER("Wrong_Answer", "答案错误"),
-    COMPILE_ERROR("Compile_Error", "编译错误"),
-    MEMORY_LIMIT_EXCEEDED("Memory_Limit_Exceeded", "内存溢出"),
-    TIME_LIMIT_EXCEEDED("Time_Limit_Exceeded", "超时"),
-    PRESENTATION_ERROR("Presentation_Error", "展示错误"),
-    OUTPUT_LIMIT_EXCEEDED("Output_Limit_Exceeded", "输出溢出"),
-    WAITING("Waiting", "等待中"),
-    DANGEROUS_OPERATION("Dangerous_Operation", "危险操作"),
-    RUNTIME_ERROR("Runtime_Error", "运行错误"),
-    SYSTEM_ERROR( "System_Error", "系统错误");
+    ACCEPTED("成功", "Accept"),
+    WRONG_ANSWER("答案错误", "Wrong_Answer"),
+    COMPILE_ERROR("编译错误", "Compile_Error"),
+    MEMORY_LIMIT_EXCEEDED("内存溢出", "Memory_Limit_Exceeded"),
+    TIME_LIMIT_EXCEEDED("超时", "Time_Limit_Exceeded"),
+    PRESENTATION_ERROR("展示错误", "Presentation_Error"),
+    OUTPUT_LIMIT_EXCEEDED("输出溢出", "Output_Limit_Exceeded"),
+    WAITING("等待中", "Waiting"),
+    DANGEROUS_OPERATION("危险操作", "Dangerous_Operation"),
+    RUNTIME_ERROR("运行错误", "Runtime_Error"),
+    SYSTEM_ERROR( "系统错误", "System_Error");
     private final String text;
 
     private final String value;

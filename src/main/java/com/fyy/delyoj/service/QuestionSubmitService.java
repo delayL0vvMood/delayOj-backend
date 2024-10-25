@@ -38,4 +38,30 @@ public interface QuestionSubmitService extends IService<QuestionSubmit> {
      * @return
      */
     int doQuestionSubmitInner(long userId, long questionId);
+
+
+    /**
+     * 查询提交记录
+     * @param questionSubmitQueryRequest
+     * @return
+     */
+    QueryWrapper<QuestionSubmit>  getQueryWrapper(QuestionSubmitQueryRequest questionSubmitQueryRequest);
+
+
+    /**
+     * 获取提交封装
+     * @param questionSubmit
+     * @return
+     */
+    QuestionSubmitVO getQuestionSubmitVO(QuestionSubmit questionSubmit, HttpServletRequest request);
+
+
+    /**
+     * 分页获取题目封装
+     *
+     * @param questionSubmitPage
+     * @param loginUser
+     * @return
+     */
+    Page<QuestionSubmitVO> getQuestionSubmitVOPage(Page<QuestionSubmit> questionSubmitPage, User loginUser);
 }

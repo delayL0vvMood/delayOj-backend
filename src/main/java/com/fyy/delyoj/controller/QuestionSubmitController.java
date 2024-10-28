@@ -13,6 +13,7 @@ import com.fyy.delyoj.model.dto.questionSubmit.QuestionSubmitQueryRequest;
 import com.fyy.delyoj.model.entity.Question;
 import com.fyy.delyoj.model.entity.QuestionSubmit;
 import com.fyy.delyoj.model.entity.User;
+import com.fyy.delyoj.model.vo.QuestionSubmitVO;
 import com.fyy.delyoj.service.QuestionSubmitService;
 import com.fyy.delyoj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,7 @@ import javax.servlet.http.HttpServletRequest;
  * @from <a href="https://fyy.icu">编程导航知识星球</a>
  */
 @RestController
-@RequestMapping("/question_thumb")
+@RequestMapping("/question_submit")
 @Slf4j
 public class QuestionSubmitController {
 
@@ -70,13 +71,23 @@ public class QuestionSubmitController {
      * @return
      */
     @PostMapping("/list/page")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<QuestionSubmit>> listQuestionSubmitByPage(@RequestBody QuestionSubmitQueryRequest questionSubmitQueryRequest) {
+    public BaseResponse<Page<QuestionSubmitVO>> listQuestionSubmitByPage(@RequestBody QuestionSubmitQueryRequest questionSubmitQueryRequest, HttpServletRequest request) {
         long current = questionSubmitQueryRequest.getCurrent();
         long size = questionSubmitQueryRequest.getPageSize();
-        Page<QuestionSubmit> questionPage = questionSubmitService.page(new Page<>(current, size),
+
+        /*
+        * 先查出所有题目提交，然后根据用户id，题目id，编程语言，题目状态，分页查询
+        * 从数据库中查到原始分页信息
+        * */
+        Page<QuestionSubmit> questionSubmitPage = questionSubmitService.page(new Page<>(current, size),
                 questionSubmitService.getQueryWrapper(questionSubmitQueryRequest));
-        return ResultUtils.success(questionPage);
+
+        final User loginUser = userService.getLoginUser(request);
+        /*
+        * 脱敏，封装类
+        * */
+        return ResultUtils.success(questionSubmitService
+                .getQuestionSubmitVOPage(questionSubmitPage, loginUser));
     }
 
 }

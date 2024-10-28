@@ -34,13 +34,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
-* @author Administrator
-* @description 针对表【question_submit(题目提交)】的数据库操作Service实现
-* @createDate 2024-09-01 21:27:26
-*/
+ * @author Administrator
+ * @description 针对表【question_submit(题目提交)】的数据库操作Service实现
+ * @createDate 2024-09-01 21:27:26
+ */
 @Service
 public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper, QuestionSubmit>
-    implements QuestionSubmitService{
+        implements QuestionSubmitService {
 
     @Resource
     private QuestionService questionService;
@@ -62,7 +62,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         String language = questionSubmitAddRequest.getLanguage();
         QuestionSubmitLanguageEnum enumByValue = QuestionSubmitLanguageEnum.getEnumByValue(language);
         if (enumByValue == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"编程语言不合法");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "编程语言不合法");
         }
         // 判断实体是否存在，根据类别获取实体
         long questionId = questionSubmitAddRequest.getQuestionId();
@@ -90,10 +90,10 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         questionSubmit.setStatus(QuestionSubmitStatusEnum.WAITING.getValue());//获取初始状态
         questionSubmit.setJudgeInfo("{}");
         boolean save = this.save(questionSubmit);
-        if ( !save) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"提交失败");
+        if (!save) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "提交失败");
         }
-        return  questionSubmit.getId();
+        return questionSubmit.getId();
 
     }
 
@@ -146,13 +146,14 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
 
     /**
      * 查询提交记录
+     *
      * @param questionSubmitQueryRequest
      * @return
      */
     @Override
-    public QueryWrapper<QuestionSubmit>  getQueryWrapper(QuestionSubmitQueryRequest questionSubmitQueryRequest){
+    public QueryWrapper<QuestionSubmit> getQueryWrapper(QuestionSubmitQueryRequest questionSubmitQueryRequest) {
         QueryWrapper<QuestionSubmit> queryWrapper = new QueryWrapper<>();
-        if (questionSubmitQueryRequest != null) {
+        if (questionSubmitQueryRequest == null) {
             return queryWrapper;
         }
         String language = questionSubmitQueryRequest.getLanguage();
@@ -163,35 +164,43 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         String sortOrder = questionSubmitQueryRequest.getSortOrder();
 
         //拼接查询条件
-        queryWrapper.eq(StringUtils.isNotBlank(language),"language",language);
-        queryWrapper.eq(ObjectUtils.isNotEmpty(userId),"userId",userId);
+        queryWrapper.eq(StringUtils.isNotBlank(language), "language", language);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
         //
-        queryWrapper.eq(QuestionSubmitStatusEnum.getEnumByValue(status) != null,"status",status);
-        queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),sortField);
+        queryWrapper.eq(QuestionSubmitStatusEnum.getEnumByValue(status) != null, "status", status);
+        queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC), sortField);
         return queryWrapper;
 
     }
+
     /**
      * 获取提交封装
      */
     @Override
-    public QuestionSubmitVO getQuestionSubmitVO(QuestionSubmit questionSubmit, HttpServletRequest request){
+    public QuestionSubmitVO getQuestionSubmitVO(QuestionSubmit questionSubmit, User loginUser) {
         QuestionSubmitVO questionSubmitVO = QuestionSubmitVO.objToVo(questionSubmit);
-        long questionSubmitId = questionSubmit.getQuestionId();
-        Long userId =questionSubmit.getUserId();
-        //获取用户信息
-        User user = null;
-        if (userId != null) {
-             user = userService.getById(userId);
+        /*
+         * 得到未脱敏数据
+         * */
+
+        /*
+        * 每次调用函数，都会获取用户信息，造成性能浪费
+        * User loginUser = userService.getLoginUser(request);
+        * */
+        long userId = loginUser.getId();
+        /*
+         * 如果查询者非题目提交本人
+         * 用户id不等于题目提交用户id'
+         * 返回信息脱敏 (无法查看代码)
+         * */
+        if (userId != questionSubmit.getUserId() && !userService.isAdmin(loginUser)) {
+            questionSubmitVO.setCode(null);
+
         }
-        UserVO userVO = userService.getUserVO(user);
-        questionSubmitVO.setUserVO(userVO);
 
         return questionSubmitVO;
     }
 
-
-    @Override
 
     /**
      * 分页获取题目封装
@@ -200,18 +209,27 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
      * @param loginUser
      * @return
      */
-    public Page<QuestionSubmitVO> getQuestionSubmitVOPage(Page<QuestionSubmit> questionSubmitPage, User loginUser){
+    @Override
+    public Page<QuestionSubmitVO> getQuestionSubmitVOPage(Page<QuestionSubmit> questionSubmitPage, User loginUser) {
         List<QuestionSubmit> questionSubmitList = questionSubmitPage.getRecords();
         Page<QuestionSubmitVO> questionSubmitVOPage = new Page<>(questionSubmitPage.getCurrent(), questionSubmitPage.getSize(), questionSubmitPage.getTotal());
-        if(CollectionUtil.isEmpty(questionSubmitList)){
+        if (CollectionUtil.isEmpty(questionSubmitList)) {
             return questionSubmitVOPage;
         }
+/*
+
 
         //关联查询用户信息
+        *//*
+         * 先将用户id放到列表当中，根据多条id查用户表，得到用户集合，根据id进行分组，得到每个id对应的用户信息
+         * *//*
         Set<Long> userIdSet = questionSubmitList.stream().map(QuestionSubmit::getUserId).collect(Collectors.toSet());
         Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream().collect(Collectors.groupingBy(User::getId));
 
         //封装用户信息
+        *//*
+         * 根据id与原有的用户信息进行匹配，将原有的用户信息填充到问题表中
+         * *//*
         List<QuestionSubmitVO> questionSubmitVOList = questionSubmitList.stream().map(questionSubmit -> {
             QuestionSubmitVO questionSubmitVO = QuestionSubmitVO.objToVo(questionSubmit);
             Long userId = questionSubmit.getUserId();
@@ -221,7 +239,11 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
             }
             questionSubmitVO.setUserVO(userService.getUserVO(user));
             return questionSubmitVO;
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toList());*/
+
+        List<QuestionSubmitVO> questionSubmitVOList = questionSubmitList.stream()
+                .map(questionSubmit -> getQuestionSubmitVO(questionSubmit, loginUser))
+                .collect(Collectors.toList());
         questionSubmitVOPage.setRecords(questionSubmitVOList);
         return questionSubmitVOPage;
     }

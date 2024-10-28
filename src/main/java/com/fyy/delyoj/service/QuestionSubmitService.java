@@ -53,7 +53,7 @@ public interface QuestionSubmitService extends IService<QuestionSubmit> {
      * @param questionSubmit
      * @return
      */
-    QuestionSubmitVO getQuestionSubmitVO(QuestionSubmit questionSubmit, HttpServletRequest request);
+    QuestionSubmitVO getQuestionSubmitVO(QuestionSubmit questionSubmit, User loginUser );
 
 
     /**

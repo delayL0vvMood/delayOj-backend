@@ -6,6 +6,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+
+import com.fyy.delyoj.model.vo.QuestionVO;
+import com.fyy.delyoj.model.vo.UserVO;
 import lombok.Data;
 
 /**
@@ -60,6 +63,7 @@ public class QuestionSubmit implements Serializable {
      * 更新时间
      */
     private Date updateTime;
+
 
     /**
      * 是否删除

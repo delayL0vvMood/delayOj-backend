@@ -21,5 +21,5 @@ public class JudgeInfo {
     /*
     * 程序执行信息
     * */
-    private Long message;
+    private String message;
 }

@@ -21,6 +21,11 @@ class CodeSandboxTest {
     @Value("${codesandbox.type:example}")
     private String type;
 
+
+    /*
+    * 通过工厂类
+    *
+    * */
     @Test
     void executeCodeByValue() {
         CodeSandbox codeSandbox = CodeSandboxFactory.newInstance(type);
@@ -44,5 +49,31 @@ class CodeSandboxTest {
     }
 
 
+    /*
+     *通过代理类创建
+     *
+     * */
+    @Test
+    void executeCodeByProxy() {
+        CodeSandbox codeSandbox = CodeSandboxFactory.newInstance(type);
+        codeSandbox = new CodeSandboxProxy(codeSandbox);
+        String code = "public class HelloWorld ";
+        String language = QuestionSubmitLanguageEnum.JAVA.getValue();
+        List<String> inputList = Arrays.asList("1 2 3 4 5" , "6 7 8 9 10");
+        /*
+         * 链式调用
+         * */
+        ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
+                .code(code)
+                .language(language)
+                .inputList(inputList)
+                .build();
+
+        ExecuteCodeResponse executeCodeResponse = codeSandbox.executeCode(executeCodeRequest);
+        /*
+         *判断是否为空
+         *  */
+        Assertions.assertNotNull(executeCodeResponse);
+    }
 
 }

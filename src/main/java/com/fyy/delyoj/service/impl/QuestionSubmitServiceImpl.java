@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fyy.delyoj.common.ErrorCode;
 import com.fyy.delyoj.constant.CommonConstant;
 import com.fyy.delyoj.exception.BusinessException;
+import com.fyy.delyoj.judge.JudgeService;
 import com.fyy.delyoj.model.dto.questionSubmit.QuestionSubmitAddRequest;
 import com.fyy.delyoj.model.dto.questionSubmit.QuestionSubmitQueryRequest;
 import com.fyy.delyoj.model.entity.*;
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.fyy.delyoj.service.UserService;
@@ -31,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +52,17 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
     @Resource
     private UserService userService;
 
+
+    /*
+    * QuestionSubmitService和JudgeService相互调用，相互依赖，SpringBoot创建bean类时，
+    * 会先创建QuestionSubmitService，在创建JudgeService时，会调用QuestionSubmitService，
+    * 此时QuestionSubmitService还未创建完成，导致报错
+    * 使用@Lazy注解，延迟加载QuestionSubmitService，在创建JudgeService时，不会创建QuestionSubmitService
+    * */
+    @Resource
+    @Lazy
+    private JudgeService judgeService;
+
     /**
      * 点赞
      *
@@ -58,7 +72,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
      */
     @Override
     public long doQuestionSubmit(QuestionSubmitAddRequest questionSubmitAddRequest, User loginUser) {
-        //todo 校验编程语言是否合法
+        // 校验编程语言是否合法
         String language = questionSubmitAddRequest.getLanguage();
         QuestionSubmitLanguageEnum enumByValue = QuestionSubmitLanguageEnum.getEnumByValue(language);
         if (enumByValue == null) {
@@ -86,13 +100,20 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         questionSubmit.setCode(questionSubmitAddRequest.getCode());
         questionSubmit.setLanguage(questionSubmitAddRequest.getLanguage());
 
-        // todo 设置初始状态
+        //  设置初始状态
         questionSubmit.setStatus(QuestionSubmitStatusEnum.WAITING.getValue());//获取初始状态
         questionSubmit.setJudgeInfo("{}");
         boolean save = this.save(questionSubmit);
         if (!save) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "提交失败");
         }
+
+        // 执行判题服务 异步处理：
+        Long questionSubmitId = questionSubmit.getId();
+        CompletableFuture.runAsync(() -> {
+            judgeService.doJudge(questionSubmitId);
+        });
+
         return questionSubmit.getId();
 
     }

@@ -11,10 +11,15 @@ import com.fyy.delyoj.constant.UserConstant;
 import com.fyy.delyoj.exception.BusinessException;
 import com.fyy.delyoj.exception.ThrowUtils;
 import com.fyy.delyoj.model.dto.question.*;
+import com.fyy.delyoj.model.dto.questionSubmit.QuestionSubmitAddRequest;
+import com.fyy.delyoj.model.dto.questionSubmit.QuestionSubmitQueryRequest;
 import com.fyy.delyoj.model.entity.Question;
+import com.fyy.delyoj.model.entity.QuestionSubmit;
 import com.fyy.delyoj.model.entity.User;
+import com.fyy.delyoj.model.vo.QuestionSubmitVO;
 import com.fyy.delyoj.model.vo.QuestionVO;
 import com.fyy.delyoj.service.QuestionService;
+import com.fyy.delyoj.service.QuestionSubmitService;
 import com.fyy.delyoj.service.UserService;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
@@ -43,11 +48,13 @@ public class QuestionController {
     private UserService userService;
     private  final static Gson GSON = new Gson();
 
+    @Resource
+    private QuestionSubmitService questionSubmitService;
+
     // region 增删改查
 
     /**
      * 创建
-     *
      * @param questionAddRequest
      * @param request
      * @return
@@ -285,5 +292,57 @@ public class QuestionController {
         boolean result = questionService.updateById(question);
         return ResultUtils.success(result);
     }
+
+
+
+
+    /**
+     * 提交题目
+     *
+     * @param questionSubmitAddRequest
+     * @param request
+     */
+    @PostMapping("/question_submit/do")
+    public BaseResponse<Long> doSubmit(@RequestBody QuestionSubmitAddRequest questionSubmitAddRequest,
+                                       HttpServletRequest request) {
+        if (questionSubmitAddRequest == null || questionSubmitAddRequest.getQuestionId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 登录才能点赞
+        final User loginUser = userService.getLoginUser(request);
+        long questionId = questionSubmitAddRequest.getQuestionId();
+        long questionSubmitId = questionSubmitService.doQuestionSubmit(questionSubmitAddRequest, loginUser);
+        return ResultUtils.success(questionSubmitId);
+    }
+
+
+
+    /**
+     * 分页获取题目提交列表（仅管理员，用户能查看到除答案的列表）
+     * 根据权限过滤答案
+     * 功能：根据用户id，题目id，编程语言，题目状态，分页查询
+     * @param questionSubmitQueryRequest
+     * @return
+     */
+    @PostMapping("/question_submit/list/page")
+    public BaseResponse<Page<QuestionSubmitVO>> listQuestionSubmitByPage(@RequestBody QuestionSubmitQueryRequest questionSubmitQueryRequest, HttpServletRequest request) {
+        long current = questionSubmitQueryRequest.getCurrent();
+        long size = questionSubmitQueryRequest.getPageSize();
+
+        /*
+         * 先查出所有题目提交，然后根据用户id，题目id，编程语言，题目状态，分页查询
+         * 从数据库中查到原始分页信息
+         * */
+        Page<QuestionSubmit> questionSubmitPage = questionSubmitService.page(new Page<>(current, size),
+                questionSubmitService.getQueryWrapper(questionSubmitQueryRequest));
+
+        final User loginUser = userService.getLoginUser(request);
+        /*
+         * 脱敏，封装类
+         * */
+        return ResultUtils.success(questionSubmitService
+                .getQuestionSubmitVOPage(questionSubmitPage, loginUser));
+    }
+
 
 }

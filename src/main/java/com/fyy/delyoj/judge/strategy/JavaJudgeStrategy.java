@@ -23,7 +23,12 @@ public class JavaJudgeStrategy implements JudgeStrategy {
         JudgeConfig bean = JSONUtil.toBean(judgeConfigStr, JudgeConfig.class);
         Long timeLimit = bean.getTimeLimit();
         Long memoryLimit = bean.getMemoryLimit();
+        //设置初始判题信息为accepted
         JudgeInfoMessageEnum judgeInfoMessageEnum = JudgeInfoMessageEnum.ACCEPTED;
+
+        //进行判题，返回判题结果
+
+        //判题样题，跑通流程，没有判题逻辑，直接返回AC
         JudgeInfo judgeInfoResponse = new JudgeInfo();
         judgeInfoResponse.setTime(time);
         judgeInfoResponse.setMemory(memory);

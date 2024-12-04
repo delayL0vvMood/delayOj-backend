@@ -24,6 +24,7 @@ public class DefaultJudgeStrategy implements JudgeStrategy {
         Long timeLimit = bean.getTimeLimit();
         Long memoryLimit = bean.getMemoryLimit();
         JudgeInfoMessageEnum judgeInfoMessageEnum = JudgeInfoMessageEnum.ACCEPTED;
+
         JudgeInfo judgeInfoResponse = new JudgeInfo();
         judgeInfoResponse.setTime(time);
         judgeInfoResponse.setMemory(memory);

@@ -57,9 +57,19 @@ class CodeSandboxTest {
     void executeCodeByProxy() {
         CodeSandbox codeSandbox = CodeSandboxFactory.newInstance(type);
         codeSandbox = new CodeSandboxProxy(codeSandbox);
-        String code = "public class HelloWorld ";
+        String code = "\n" +
+                "public class Main {\n" +
+                "\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int var1 = Integer.parseInt(args[0]);\n" +
+                "        int var2 = Integer.parseInt(args[1]);\n" +
+                "        int var3 = var1 + var2;\n" +
+                "        System.out.println(\"结果是：\" + var3);\n" +
+                "    }\n" +
+                "\n" +
+                "}\n";
         String language = QuestionSubmitLanguageEnum.JAVA.getValue();
-        List<String> inputList = Arrays.asList("1 2 3 4 5" , "6 7 8 9 10");
+        List<String> inputList = Arrays.asList("1 2" , "6 7");
         /*
          * 链式调用
          * */

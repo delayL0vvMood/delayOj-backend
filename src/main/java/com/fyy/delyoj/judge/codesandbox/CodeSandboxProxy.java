@@ -19,7 +19,6 @@ public class CodeSandboxProxy implements CodeSandbox{
 
     public CodeSandboxProxy(CodeSandbox codeSandbox){
         this.codeSandbox = codeSandbox;
-
     }
 
 

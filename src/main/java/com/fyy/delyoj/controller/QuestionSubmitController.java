@@ -32,23 +32,23 @@ import javax.servlet.http.HttpServletRequest;
  * @from <a href="https://fyy.icu">编程导航知识星球</a>
  */
 @RestController
-@RequestMapping("/question_submit")
+//@RequestMapping("/question_submit")
 @Slf4j
 @Deprecated
 public class QuestionSubmitController {
 
-    @Resource
+   /* @Resource
     private QuestionSubmitService questionSubmitService;
 
     @Resource
     private UserService userService;
 
-    /**
+    *//**
      * 提交题目
      *
      * @param questionSubmitAddRequest
      * @param request
-     */
+     *//*
     @PostMapping("/")
     public BaseResponse<Long> doSubmit(@RequestBody QuestionSubmitAddRequest questionSubmitAddRequest,
             HttpServletRequest request) {
@@ -64,31 +64,31 @@ public class QuestionSubmitController {
 
 
 
-    /**
+    *//**
      * 分页获取题目提交列表（仅管理员，用户能查看到除答案的列表）
      * 根据权限过滤答案
      * 功能：根据用户id，题目id，编程语言，题目状态，分页查询
      * @param questionSubmitQueryRequest
      * @return
-     */
+     *//*
     @PostMapping("/list/page")
     public BaseResponse<Page<QuestionSubmitVO>> listQuestionSubmitByPage(@RequestBody QuestionSubmitQueryRequest questionSubmitQueryRequest, HttpServletRequest request) {
         long current = questionSubmitQueryRequest.getCurrent();
         long size = questionSubmitQueryRequest.getPageSize();
 
-        /*
+        *//*
         * 先查出所有题目提交，然后根据用户id，题目id，编程语言，题目状态，分页查询
         * 从数据库中查到原始分页信息
-        * */
+        * *//*
         Page<QuestionSubmit> questionSubmitPage = questionSubmitService.page(new Page<>(current, size),
                 questionSubmitService.getQueryWrapper(questionSubmitQueryRequest));
 
         final User loginUser = userService.getLoginUser(request);
-        /*
+        *//*
         * 脱敏，封装类
-        * */
+        * *//*
         return ResultUtils.success(questionSubmitService
                 .getQuestionSubmitVOPage(questionSubmitPage, loginUser));
-    }
+    }*/
 
 }

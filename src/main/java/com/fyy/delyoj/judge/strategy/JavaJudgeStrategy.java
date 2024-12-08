@@ -24,19 +24,16 @@ public class JavaJudgeStrategy implements JudgeStrategy {
         Long timeLimit = bean.getTimeLimit();
         Long memoryLimit = bean.getMemoryLimit();
         //设置初始判题信息为accepted
-        JudgeInfoMessageEnum judgeInfoMessageEnum = JudgeInfoMessageEnum.ACCEPTED;
-
         //进行判题，返回判题结果
-
         //判题样题，跑通流程，没有判题逻辑，直接返回AC
         JudgeInfo judgeInfoResponse = new JudgeInfo();
         judgeInfoResponse.setTime(time);
         judgeInfoResponse.setMemory(memory);
-        judgeInfoResponse.setMessage(judgeInfoMessageEnum.getValue());
+        judgeInfoResponse.setMessage(JudgeInfoMessageEnum.ACCEPTED.getValue());
 
         //i:f输出列表和输入列表长度不一致，则判题失败
         if (outputList.size() != inputList.size()) {
-            judgeInfoMessageEnum = JudgeInfoMessageEnum.WRONG_ANSWER;
+            judgeInfoResponse.setMessage(JudgeInfoMessageEnum.WRONG_ANSWER.getValue());
             return judgeInfoResponse;
         }
 
@@ -44,19 +41,19 @@ public class JavaJudgeStrategy implements JudgeStrategy {
         for (int i = 0; i < outputList.size(); i++) {
             JudgeCase judgeCase = judgeCaseList.get(i);
             if (!judgeCase.getOutput().equals(outputList.get(i))) {
-                judgeInfoMessageEnum = JudgeInfoMessageEnum.WRONG_ANSWER;
+                judgeInfoResponse.setMessage(JudgeInfoMessageEnum.WRONG_ANSWER.getValue());
                 return judgeInfoResponse;
             }
         }
 
         //iii:判断判题条件
         if (memory > memoryLimit) {
-            judgeInfoMessageEnum = JudgeInfoMessageEnum.MEMORY_LIMIT_EXCEEDED;
+            judgeInfoResponse.setMessage(JudgeInfoMessageEnum.MEMORY_LIMIT_EXCEEDED.getValue());
             return judgeInfoResponse;
         }
 
         if (time > timeLimit) {
-            judgeInfoMessageEnum = JudgeInfoMessageEnum.TIME_LIMIT_EXCEEDED;
+            judgeInfoResponse.setMessage(JudgeInfoMessageEnum.TIME_LIMIT_EXCEEDED.getValue());
             return judgeInfoResponse;
         }
 

@@ -7,7 +7,9 @@ import com.fyy.delyoj.model.dto.questionSubmit.JudgeInfo;
 import com.fyy.delyoj.model.entity.Question;
 import com.fyy.delyoj.model.enums.JudgeInfoMessageEnum;
 
+import javax.swing.text.html.Option;
 import java.util.List;
+import java.util.Optional;
 
 public class JavaJudgeStrategy implements JudgeStrategy {
     @Override
@@ -17,8 +19,8 @@ public class JavaJudgeStrategy implements JudgeStrategy {
         List<String> inputList = judgeContext.getInputList();
         List<String> outputList = judgeContext.getOutputList();
         Question question = judgeContext.getQuestion();
-        Long time = judgeInfo.getTime();
-        Long memory = judgeInfo.getMemory();
+        Long time = Optional.ofNullable( judgeInfo.getTime()).orElse(0l);
+        Long memory = Optional.ofNullable( judgeInfo.getMemory()).orElse(0l);
         String judgeConfigStr = question.getJudgeConfig();
         JudgeConfig bean = JSONUtil.toBean(judgeConfigStr, JudgeConfig.class);
         Long timeLimit = bean.getTimeLimit();
@@ -40,12 +42,13 @@ public class JavaJudgeStrategy implements JudgeStrategy {
         //ii:输出列表和输入列表长度一致，则逐个比较输出列表和输入列表的元素，如果有一个不相等，则判题失败
         for (int i = 0; i < outputList.size(); i++) {
             JudgeCase judgeCase = judgeCaseList.get(i);
-            if (!judgeCase.getOutput().equals(outputList.get(i))) {
+            String ans = judgeCase.getOutput();
+            String output = outputList.get(i);
+            if (!ans.equals(output)) {
                 judgeInfoResponse.setMessage(JudgeInfoMessageEnum.WRONG_ANSWER.getValue());
                 return judgeInfoResponse;
             }
         }
-
         //iii:判断判题条件
         if (memory > memoryLimit) {
             judgeInfoResponse.setMessage(JudgeInfoMessageEnum.MEMORY_LIMIT_EXCEEDED.getValue());

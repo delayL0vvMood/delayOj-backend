@@ -95,6 +95,7 @@ public class JudgeServiceImpl implements JudgeService {
         judgeContext.setOutputList(executeCodeResponse.getOutputList());
         judgeContext.setQuestion(question);
         judgeContext.setJudgeCaseList(judgeCaseList);
+        judgeContext.setQuestionSubmit(questionSubmit);
             //策略模式选择
         JudgeManager judgeManager = new JudgeManager();
         JudgeInfo judgeInfo = judgeManager.doJudge(judgeContext);

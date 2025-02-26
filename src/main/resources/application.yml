@@ -52,6 +52,8 @@ server:
     session:
       cookie:
         max-age: 2592000
+        same-site: none # 设置SameSite为None
+        secure: false   # 禁用Secure属性（仅用于开发环境）
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false

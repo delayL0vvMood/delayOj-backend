@@ -3,7 +3,7 @@
 # @from <a href="https://fyy.icu">编程导航知识星球</a>
 spring:
   application:
-    name: delyoj
+    name: delayoj
   # 默认 dev 环境
   profiles:
     active: dev
@@ -21,7 +21,7 @@ spring:
   # todo 需替换配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/yuoj
+    url: jdbc:mysql://mysql:3306/delayoj
     username: root
     password: 123456
   # Redis 配置
@@ -52,6 +52,8 @@ server:
     session:
       cookie:
         max-age: 2592000
+        same-site: none # 设置SameSite为None
+        secure: false   # 禁用Secure属性（仅用于开发环境）
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false

@@ -3,12 +3,15 @@ package com.fyy.delyoj.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fyy.delyoj.common.ErrorCode;
 import com.fyy.delyoj.constant.CommonConstant;
 import com.fyy.delyoj.exception.BusinessException;
 import com.fyy.delyoj.judge.JudgeService;
+import com.fyy.delyoj.model.dto.message.JudgeMessage;
+import com.fyy.delyoj.model.dto.message.JudgeMessageEnum;
 import com.fyy.delyoj.model.dto.questionSubmit.QuestionSubmitAddRequest;
 import com.fyy.delyoj.model.dto.questionSubmit.QuestionSubmitQueryRequest;
 import com.fyy.delyoj.model.entity.*;
@@ -16,6 +19,7 @@ import com.fyy.delyoj.model.enums.QuestionSubmitLanguageEnum;
 import com.fyy.delyoj.model.enums.QuestionSubmitStatusEnum;
 import com.fyy.delyoj.model.vo.QuestionSubmitVO;
 import com.fyy.delyoj.model.vo.UserVO;
+import com.fyy.delyoj.rabbitmq.MessageProducer;
 import com.fyy.delyoj.service.*;
 import com.fyy.delyoj.mapper.QuestionSubmitMapper;
 import com.fyy.delyoj.utils.SqlUtils;
@@ -47,10 +51,10 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
 
     @Resource
     private QuestionService questionService;
-    @Autowired
-    private UserService userServiceImpl;
     @Resource
     private UserService userService;
+    @Resource
+    private MessageProducer messageProducer;
 
 
     /*
@@ -106,13 +110,28 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         boolean save = this.save(questionSubmit);
         if (!save) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "提交失败");
+        }else {
+            LambdaUpdateWrapper<Question> questionLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            questionLambdaUpdateWrapper.eq(Question::getId,questionId)
+                    .setSql("submitNum = submitNum + 1");
+            questionService.update(null,questionLambdaUpdateWrapper);
         }
 
-        // 执行判题服务 异步处理：
         Long questionSubmitId = questionSubmit.getId();
-        CompletableFuture.runAsync(() -> {
-            judgeService.doJudge(questionSubmitId);
-        });
+        JudgeMessage judgeMessage = new JudgeMessage();
+        judgeMessage.setMessageType(JudgeMessageEnum.QUESTION_SUBMIT);
+        judgeMessage.setQuestionSubmitId(questionSubmitId);
+        judgeMessage.setExamSubmitId(null);
+        judgeMessage.setUserId(null);
+        // 发送消息到消息队列
+        messageProducer.sendMessage("code_exchange", "my_routingKey", judgeMessage);
+
+
+
+        // 执行判题服务 异步处理：
+//        CompletableFuture.runAsync(() -> {
+//            judgeService.doJudge(questionSubmitId);
+//        });
 
         return questionSubmit.getId();
 
@@ -238,19 +257,15 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
             return questionSubmitVOPage;
         }
 /*
+        //先将用户id放到列表当中，根据多条id查用户表，得到用户集合，根据id进行分组，得到每个id对应的用户信息
 
-
-        //关联查询用户信息
-        *//*
-         * 先将用户id放到列表当中，根据多条id查用户表，得到用户集合，根据id进行分组，得到每个id对应的用户信息
-         * *//*
         Set<Long> userIdSet = questionSubmitList.stream().map(QuestionSubmit::getUserId).collect(Collectors.toSet());
         Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream().collect(Collectors.groupingBy(User::getId));
 
         //封装用户信息
-        *//*
-         * 根据id与原有的用户信息进行匹配，将原有的用户信息填充到问题表中
-         * *//*
+
+         //根据id与原有的用户信息进行匹配，将原有的用户信息填充到问题表中
+
         List<QuestionSubmitVO> questionSubmitVOList = questionSubmitList.stream().map(questionSubmit -> {
             QuestionSubmitVO questionSubmitVO = QuestionSubmitVO.objToVo(questionSubmit);
             Long userId = questionSubmit.getUserId();
@@ -260,8 +275,9 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
             }
             questionSubmitVO.setUserVO(userService.getUserVO(user));
             return questionSubmitVO;
-        }).collect(Collectors.toList());*/
+        }).collect(Collectors.toList());
 
+        */
         List<QuestionSubmitVO> questionSubmitVOList = questionSubmitList.stream()
                 .map(questionSubmit -> getQuestionSubmitVO(questionSubmit, loginUser))
                 .collect(Collectors.toList());

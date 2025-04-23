@@ -3,6 +3,7 @@ package com.fyy.delyoj;
 import com.fyy.delyoj.config.WxOpenConfig;
 import javax.annotation.Resource;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
@@ -21,5 +22,6 @@ class MainApplicationTests {
     void contextLoads() {
         System.out.println(wxOpenConfig);
     }
+
 
 }

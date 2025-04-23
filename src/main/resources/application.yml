@@ -14,24 +14,34 @@ spring:
   # session 配置
   session:
     # todo 取消注释开启分布式 session（须先配置 Redis）
-    # store-type: redis
+    store-type: redis
     # 30 天过期
     timeout: 2592000
   # 数据库配置
   # todo 需替换配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://mysql:3306/delayoj
+    url: jdbc:mysql://localhost:3306/yuoj
     username: root
     password: 123456
+    hikari:
+      auto-commit: true
   # Redis 配置
   # todo 需替换配置，然后取消注释
-#  redis:
-#    database: 1
-#    host: localhost
-#    port: 6379
-#    timeout: 5000
-#    password: 123456
+  redis:
+    database: 1
+    host: localhost
+    #host: redis
+    port: 6379
+    timeout: 5000
+    #password: 123456
+
+  rabbitmq:
+    host: localhost
+    #host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
   # Elasticsearch 配置
   # todo 需替换配置，然后取消注释
 #  elasticsearch:
@@ -43,6 +53,8 @@ spring:
     multipart:
       # 大小限制
       max-file-size: 10MB
+  jackson:
+    date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat
 server:
   address: 0.0.0.0
   port: 8101
@@ -52,8 +64,7 @@ server:
     session:
       cookie:
         max-age: 2592000
-        same-site: none # 设置SameSite为None
-        secure: false   # 禁用Secure属性（仅用于开发环境）
+        path: /api
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
@@ -103,7 +114,10 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.fyy.delyoj.controller
-
+logging:
+  level:
+    org.mybatis: trace
+    org.springframework.jdbc.datasource.DataSourceTransactionManager: debug
 # 代码沙箱配置：
 codesandbox:
   type: remote

@@ -49,9 +49,6 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
     private UserService userService;
 
 
-    @Resource
-    private ElasticsearchRestTemplate elasticsearchRestTemplate;
-
     @Override
     public void validQuestion(Question question, boolean add) {
         if (question == null) {

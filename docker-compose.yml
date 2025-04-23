@@ -1,31 +1,123 @@
 version: '3'
 services:
   app:
-    build: .  # 使用当前目录下的 Dockerfile 构建 Spring Boot 应用镜像
+    build: .
     ports:
-      - "8101:8101"  # 将容器的 8101 端口映射到主机的 8101 端口
+      - "8101:8101"
     environment:
-      - SPRING_PROFILES_ACTIVE=dev  # 设置 Spring Boot 的环境为 prod
+      - SPRING_PROFILES_ACTIVE=dev
+      # 关键修改：配置数据库连接参数
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/yuoj?useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_USERNAME=root                # 使用 root 用户（或自定义用户）
+      - SPRING_DATASOURCE_PASSWORD=123456              # 与 MYSQL_ROOT_PASSWORD 一致
+    deploy:
+      resources:
+        limits:
+          memory: 2000m
+          cpus: "1.0"
     depends_on:
-      - mysql  # 依赖 mysql 服务
+      mysql:
+        condition: service_healthy  # 等待 MySQL 健康检查通过
+      rabbitmq:
+        condition: service_healthy  # 等待 RabbitMQ 健康检查通过
     networks:
-      - my-network  # 连接到自定义网络
+      - my-network
+    restart: unless-stopped # 异常退出重启
+
 
   mysql:
-    image: mysql:5.7  # 使用 MySQL 5.7 镜像
+    image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: 123456  # 设置 MySQL root 用户的密码
-      MYSQL_DATABASE: delayoj  # 创建名为 delayoj 的数据库
-    ports:
-      - "3306:3306"  # 将容器的 3306 端口映射到主机的 3306 端口
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: yuoj
+      # 允许 root 远程登录（仅限开发环境）
+      MYSQL_ROOT_HOST: "%"
+    # 移除 ports 映射（生产环境建议关闭外部直接访问）
+    # ports:
+    #   - "3306:3306"
     volumes:
-      - mysql-data:/var/lib/mysql  # 持久化 MySQL 数据
-      - ./sql:/docker-entrypoint-initdb.d  # 挂载 SQL 初始化脚本
+      - mysql-data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d  # 确保此目录存在且包含 SQL 文件
     networks:
-      - my-network  # 连接到自定义网络
+      - my-network
+    # 健康检查确保 MySQL 就绪
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 2000m
+          cpus: "0.5"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.0-alpine            # 轻量级镜像
+    environment:
+      - REDIS_PASSWORD=123456          # 可选密码（如需启用，Spring 配置需同步）
+    volumes:
+      - redis-data:/data               # 持久化数据存储
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--auth", "123456", "ping" ] # 带密码的健康检查
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - my-network
+    deploy:
+      resources:
+        limits:
+          memory: 1000m
+          cpus: "0.3"
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_VHOST: "/"  # 显式指定默认 vhost
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbitmq_management load_definitions '/etc/rabbitmq/definitions.json'"
+    volumes:
+      - ./definitions.json:/etc/rabbitmq/definitions.json
+      - rabbitmq-data:/var/lib/rabbitmq  # 添加持久化卷
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_running" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - my-network
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    deploy:
+      resources:
+        limits:
+          memory: 1000m
+          cpus: "0.5"
+    restart: unless-stopped
+
+#  # Nginx 反向代理
+#  nginx:
+#    image: nginx:latest
+#    ports:
+#      - "80:80"  # 监听宿主机的 80 端口
+#    volumes:
+#      - ./nginx/conf.d:/etc/nginx/conf.d  # 挂载自定义 Nginx 配置
+#    depends_on:
+#      - app  # 确保后端服务先启动
+#    networks:
+#      - my-network
+#    restart: unless-stopped
+
 
 volumes:
-  mysql-data:  # 定义 MySQL 数据卷
+  mysql-data:
+  redis-data:
+  rabbitmq-data:
 
 networks:
-  my-network:  # 定义自定义网络
+  my-network:

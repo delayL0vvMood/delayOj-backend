@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fyy.delyoj.mapper.ExamMapper">
+
+    <resultMap id="BaseResultMap" type="com.fyy.delyoj.model.entity.Exam">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="examName" column="examName" jdbcType="VARCHAR"/>
+            <result property="examDesc" column="examDesc" jdbcType="VARCHAR"/>
+            <result property="userId" column="userId" jdbcType="BIGINT"/>
+            <result property="startTime" column="startTime" jdbcType="TIMESTAMP"/>
+            <result property="endTime" column="endTime" jdbcType="TIMESTAMP"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="isPublic" column="isPublic" jdbcType="TINYINT"/>
+            <result property="examPassword" column="examPassword" jdbcType="VARCHAR"/>
+            <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,examName,examDesc,
+        userId,startTime,endTime,
+        status,isPublic,examPassword,
+        createTime,updateTime,isDelete
+    </sql>
+</mapper>

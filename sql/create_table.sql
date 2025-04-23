@@ -1,8 +1,8 @@
 
-create database if not exists delayoj;
+create database if not exists yuoj;
 
 -- 切换库
-use delayoj;
+use yuoj;
 
 -- 用户表
 create table if not exists user
@@ -99,3 +99,93 @@ create table if not exists post_favour
     index idx_postId (postId),
     index idx_userId (userId)
 ) comment '帖子收藏';
+
+-- 考试表
+create table if not exists exam
+(
+    id              bigint auto_increment comment 'id' primary key,
+    examName        varchar(512)                       not null comment '考试名称',
+    examDesc        text                               null comment '考试描述',
+    userId          bigint                             not null comment '创建者用户id',
+    startTime       datetime                           not null comment '考试开始时间',
+    endTime         datetime                           not null comment '考试结束时间',
+    status          tinyint  default 0                 not null comment '状态：0-未开始 1-进行中 2-已结束',
+    isPublic        tinyint  default 1                 not null comment '是否公开：0-私有 1-公开',
+    examPassword    varchar(128)                       null comment '访问密码',
+    createTime      datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime      datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete        tinyint  default 0                 not null comment '是否删除',
+    index idx_userId (userId),
+    index idx_status (status)
+    ) comment '考试表' collate = utf8mb4_unicode_ci;
+
+-- 考试题目关联表
+create table if not exists exam_question
+(
+    id          bigint auto_increment comment 'id' primary key,
+    examId      bigint                             not null comment '考试id',
+    questionId  bigint                             not null comment '题目id',
+    score       int      default 0                 not null comment '本题分数',
+    questionOrder int    default 0                 not null comment '题目顺序（从1开始）',
+    createTime  datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime  datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete    tinyint  default 0                 not null comment '是否删除',
+    index idx_examId (examId),
+    index idx_questionId (questionId)
+    ) comment '考试题目关联表' collate = utf8mb4_unicode_ci;
+
+-- 考试参与用户表
+create table if not exists exam_user
+(
+    id              bigint auto_increment comment 'id' primary key,
+    examId          bigint                             not null comment '考试id',
+    userId          bigint                             not null comment '用户id',
+    joinTime        datetime                           null comment '用户进入考试时间',
+    submitTime      datetime                           null comment '用户提交时间',
+    status          tinyint  default 0                 not null comment '状态：0-未开始 1-进行中 2-已提交 3-超时未提交',
+    createTime      datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime      datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete        tinyint  default 0                 not null comment '是否删除',
+    index idx_examId (examId),
+    index idx_userId (userId)
+    ) comment '考试参与用户表' collate = utf8mb4_unicode_ci;
+
+-- 用户成绩表（记录每个用户在考试中每个题目的得分）
+create table if not exists user_score
+(
+    id          bigint auto_increment comment 'id' primary key,
+    examId      bigint                             not null comment '考试id',
+    userId      bigint                             not null comment '用户id',
+    questionId  bigint                             not null comment '题目id',
+    score       int      default 0                 not null comment '得分',
+    judgeResult text                               null comment '判题结果（JSON数组，包含用例详情）',
+    createTime  datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime  datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete    tinyint  default 0                 not null comment '是否删除',
+    index idx_examId (examId),
+    index idx_userId (userId),
+    index idx_questionId (questionId)
+    ) comment '用户成绩表' collate = utf8mb4_unicode_ci;
+
+
+-- 考试提交表（记录用户在考试中每道题的提交记录）
+create table if not exists exam_submit
+(
+    id          bigint auto_increment comment 'id' primary key,
+    examId      bigint                             not null comment '考试id',
+    userId      bigint                             not null comment '用户id',
+    questionId  bigint                             not null comment '题目id',
+    language    varchar(128)                       not null comment '编程语言',
+    code        text                               not null comment '提交代码',
+    judgeInfo   text                               null comment '判题信息（JSON对象）',
+    status      tinyint  default 0                 not null comment '状态：0-待判题 1-判题中 2-成功 3-失败',
+    createTime  datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime  datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete    tinyint  default 0                 not null comment '是否删除',
+    index idx_examId (examId),
+    index idx_userId (userId),
+    index idx_questionId (questionId)
+    ) comment '考试提交记录表' collate = utf8mb4_unicode_ci;
+
+
+
